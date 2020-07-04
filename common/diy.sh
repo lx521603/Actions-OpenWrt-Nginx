@@ -26,7 +26,6 @@ git clone https://github.com/rufengsuixing/luci-app-autoipsetadder
 git clone https://github.com/jerrykuku/node-request.git
 git clone https://github.com/jerrykuku/luci-app-jd-dailybonus
 
-svn co https://github.com/kenzok8/openwrt-packages/trunk/luci-app-passwall
 svn co https://github.com/Lienol/openwrt-package/trunk/package/tcping
 git clone https://github.com/pexcn/openwrt-chinadns-ng.git chinadns-ng
 svn co https://github.com/Lienol/openwrt-package/trunk/package/brook
@@ -59,8 +58,10 @@ sed -i 's?zip zstd$?zip zstd ucl upx\n$(curdir)/upx/compile := $(curdir)/ucl/com
 ./scripts/feeds update -a && ./scripts/feeds install -a
 sed -i 's/..\/..\/luci.mk/$(TOPDIR)\/feeds\/luci\/luci.mk/g' package/feeds/custom/*/Makefile
 sed -i 's/-std=\(gnu\|c\)++\(11\|14\)//g' package/feeds/*/*/Makefile
-
+rm -f target/linux/generic/hack-5.4/999-shortcut-fe-support.patch target/linux/generic/hack-5.4/999-thermal-tristate.patch  target/linux/generic/hack-5.4/952-net-conntrack-events-support-multiple-registrant.patch
+wget -P target/linux/generic/hack-5.4/ https://raw.githubusercontent.com/coolsnowwolf/lede/master/target/linux/generic/hack-5.4/999-shortcut-fe-support.patch
 wget -P target/linux/generic/hack-5.4/ https://raw.githubusercontent.com/coolsnowwolf/lede/master/target/linux/generic/hack-5.4/999-thermal-tristate.patch
+wget -P target/linux/generic/hack-5.4/ https://raw.githubusercontent.com/coolsnowwolf/lede/master/target/linux/generic/hack-5.4/952-net-conntrack-events-support-multiple-registrant.patch
 rm -Rf package/*/*/autocore
 rm -Rf package/*/*/qBittorrent/patches
 rm -Rf package/*/*/luci-app-zerotier/root/etc/init.d/zerotier
