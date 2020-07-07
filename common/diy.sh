@@ -72,21 +72,20 @@ chmod +x files/usr/share/aria2/*.sh
 rm -Rf package/*/*/antileech/src/* && git clone https://github.com/persmule/amule-dlp.antiLeech package/feeds/custom/antileech/src
 svn co https://github.com/coolsnowwolf/lede/trunk/package/lean/default-settings/i18n package/feeds/custom/default-settings/po/zh_Hans
 rm -Rf package/*/*/luci-theme-argon/htdocs/luci-static/argon/img/*
-sed -i 's/\[ -e "$FILE" \] && . "$FILE"/[ -e "$FILE" ] \&\& env -i bash "$FILE"/g' package/base-files/files/etc/profile
+sed -i 's/\[ -e "$FILE" \] && . "$FILE"/[ -e "$FILE" ] \&\& \[ -f "\/bin\/bash" \] \&\& env -i bash "$FILE" || . "$FILE"/g' package/base-files/files/etc/profile
 sed -i 's/var opts = \[\]/var opts = \["-k"\]/g' package/feeds/luci/luci-mod-system/htdocs/luci-static/resources/view/system/flash.js
 sed -i '/depends on PACKAGE_php7-cli || PACKAGE_php7-cgi/d' package/*/*/php7/Makefile
 sed -i 's?/etc/config/AdGuardHome?/etc/config/AdGuardHome\n/etc/config/AdGuardHome/AdGuardHome.yaml?g'  package/*/*/luci-app-adguardhome/Makefile
 sed -i 's?\(include $(TOPDIR)/feeds/luci/luci.mk\)?define Package/luci-app-ssr-plus/conffiles\n/etc/config/shadowsocksr\nendef\n\1?g'  package/*/*/luci-app-ssr-plus/Makefile
 sed -i 's/DEPENDS:= strongswan/DEPENDS:=+strongswan/g' package/*/*/strongswan/Makefile
-sed -i 's/+rclone\( \|\$\)/+rclone +fuse-utils\1/g' package/*/*/luci-app-rclone/Makefile
-sed -i 's/+acme\( \|\$\)/+acme +acme-dnsapi\1/g' package/*/*/luci-app-acme/Makefile
-sed -i 's/+amule\( \|\$\)/+amule +antileech\1/g' package/*/*/luci-app-amule/Makefile
-sed -i 's/sysinit/respawn/g' package/base-files/files/etc/inittab
+sed -i 's/+rclone\( \|$\)/+rclone +fuse-utils\1/g' package/*/*/luci-app-rclone/Makefile
+sed -i 's/+acme\( \|$\)/+acme +acme-dnsapi\1/g' package/*/*/luci-app-acme/Makefile
+sed -i 's/+amule\( \|$\)/+amule +antileech\1/g' package/*/*/luci-app-amule/Makefile
 sed -i 's/ @!BUSYBOX_DEFAULT_IP:/ +/g' package/*/*/wrtbwmon/Makefile
 sed -i 's/root\/Download/data\/download\/aria2/g' files/usr/share/aria2/*
 sed -i '/resolvfile=/d' package/*/*/luci-app-adguardhome/root/etc/init.d/AdGuardHome
 sed -i 's/DEPENDS:=/DEPENDS:=+adguardhome /g' package/*/*/luci-app-adguardhome/Makefile
-sed -i 's/LUCI_DEPENDS:=/LUCI_DEPENDS:=+transmission-daemon-openssl /g' package/*/*/luci-app-transmission/Makefile
+sed -i 's/DEPENDS:=/DEPENDS:=+adguardhome /g' package/*/*/luci-app-adguardhome/Makefile
 sed -i '/_redirect2ssl/d' package/*/*/nginx/Makefile
 sed -i '/init_lan/d' package/*/*/nginx/files/nginx.init
 sed -i '$a /etc/sysupgrade.conf' package/base-files/files/lib/upgrade/keep.d/base-files-essential
@@ -95,6 +94,7 @@ sed -i '$a /etc/amule' package/base-files/files/lib/upgrade/keep.d/base-files-es
 sed -i '$a /www/speedtest/results/telemetry_settings.php' package/base-files/files/lib/upgrade/keep.d/base-files-essential
 sed -i '$a /etc/php7/custom.ini' package/base-files/files/lib/upgrade/keep.d/base-files-essential
 # find target/linux/x86 -name "config*" -exec bash -c 'cat kernel.conf >> "{}"' \;
+sed -i '$a CONFIG_ACPI=y\nCONFIG_X86_ACPI_CPUFREQ=y\nCONFIG_CPU_FREQ_GOV_CONSERVATIVE=y\nCONFIG_CPU_FREQ_GOV_POWERSAVE=y\nCONFIG_CPU_FREQ_GOV_USERSPACE=y' target/linux/*/config-*
 sed -i '/continue$/d' package/*/*/luci-app-ssr-plus/root/usr/bin/ssr-switch
 sed -i 's/if test_proxy/sleep 3600\nif test_proxy/g' package/*/*/luci-app-ssr-plus/root/usr/bin/ssr-switch
 sed -i 's/ uci.cursor/ luci.model.uci.cursor/g' package/*/*/luci-app-ssr-plus/root/usr/share/shadowsocksr/subscribe.lua
@@ -124,10 +124,10 @@ find package/*/custom/*/ -maxdepth 2 -d -name "zh-cn" | xargs -i rename -v 's/zh
 sed -i "/po2lmo /d" package/*/custom/*/Makefile
 sed -i "/luci\/i18n/d" package/*/custom/*/Makefile
 sed -i "/*\.po/d" package/*/custom/*/Makefile
-sed -i "s/+luci\( \|\$\)//g"  package/*/*/*/Makefile
-sed -i "s/+nginx\( \|\$\)/+nginx-ssl\1/g"  package/*/*/*/Makefile
-sed -i 's/+python\( \|\$\)/+python3/g' package/*/*/*/Makefile
-sed -i "s/askfirst/respawn/g" target/linux/x86/base-files/etc/inittab
+sed -i "s/+luci\( \|$\)//g"  package/*/*/*/Makefile
+sed -i "s/+nginx\( \|$\)/+nginx-ssl\1/g"  package/*/*/*/Makefile
+sed -i 's/+python\( \|$\)/+python3/g' package/*/*/*/Makefile
+find package target -name inittab | xargs -i sed -i "s/askfirst/respawn/g" {}
 sed -i "/mediaurlbase/d" package/*/*/luci-theme*/root/etc/uci-defaults/*
 date=`date +%m.%d.%Y`
 sed -i "s/DISTRIB_DESCRIPTION.*/DISTRIB_DESCRIPTION='%D %V %C by GaryPang'/g" package/base-files/files/etc/openwrt_release
