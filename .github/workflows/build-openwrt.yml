@@ -9,12 +9,11 @@
 name: Openwrt-AutoBuild
 
 on: 
-  repository_dispatch:
   # push: 
   #   branches:
   #     - master
-  #schedule:
-  #  - cron: 0 16 * * 6
+  schedule:
+    - cron: 0 16 * * 6
   watch:
     types: started
 
@@ -36,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [x86_64]
+        target: [k2p,x86_64]
         
     steps:
     - name: Checkout
@@ -56,7 +55,6 @@ jobs:
         echo "::set-env name=UPLOAD_FIRMWARE_FOR_RELEASE::${UPLOAD_FIRMWARE_FOR_RELEASE}"
         echo "::set-env name=UPLOAD_FIRMWARE_TO_COWTRANSFER::${UPLOAD_FIRMWARE_TO_COWTRANSFER}"
         echo "::set-env name=UPLOAD_FIRMWARE_TO_WETRANSFER::${UPLOAD_FIRMWARE_TO_WETRANSFER}"
-
     - name: Initialization environment
       env:
         DEBIAN_FRONTEND: noninteractive
@@ -74,7 +72,6 @@ jobs:
         echo "::set-env name=date::$(date +'%m/%d_%Y_%H/%M')"
         echo "::set-env name=date2::$(date +'%m/%d %Y')"
         echo "::set-env name=date3::$(date +'%m.%d')"
-
     - name: Clone source code
       run: |
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
@@ -92,7 +89,6 @@ jobs:
         #ln -s /mnt/openwrt/build_dir/host openwrt/build_dir/
         #ln -s /mnt/openwrt/dl openwrt/
         #ln -s /mnt/openwrt/staging_dir openwrt/
-
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
 
@@ -146,12 +142,12 @@ jobs:
         [ $(grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/') == generic ] && DEVICE_NAME=$(grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/CONFIG_TARGET_(.*)_DEVICE_.*=y/\1/') || DEVICE_NAME=$(grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/')
         echo "::set-env name=DEVICE_NAME::$DEVICE_NAME"
         
-    #- name: Default PPPOE Setting
-      #if: env.PPPOE_USERNAME && env.PPPOE_PASSWD
-      #run: |
-        #sed -i '$i uci set network.wan.username=${{ env.PPPOE_USERNAME }}' openwrt/package/*/*/default-settings/files/zzz-default-settings
-        #sed -i '$i uci set network.wan.password=${{ env.PPPOE_PASSWD }}' openwrt/package/*/*/default-settings/files/zzz-default-settings
-        #sed -i '$i uci commit network' openwrt/package/*/*/default-settings/files/zzz-default-settings
+    - name: Default PPPOE Setting
+      if: env.PPPOE_USERNAME && env.PPPOE_PASSWD
+      run: |
+        sed -i '$i uci set network.wan.username=${{ env.PPPOE_USERNAME }}' openwrt/package/*/*/default-settings/files/zzz-default-settings
+        sed -i '$i uci set network.wan.password=${{ env.PPPOE_PASSWD }}' openwrt/package/*/*/default-settings/files/zzz-default-settings
+        sed -i '$i uci commit network' openwrt/package/*/*/default-settings/files/zzz-default-settings
               
     - name: SSH connection to Actions
       uses: garypang13/debugger-action@master
@@ -164,7 +160,6 @@ jobs:
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
-
     - name: Compile the firmware
       run: |
         cd openwrt
@@ -218,7 +213,6 @@ jobs:
         wetrans=$(echo $wetrans | grep -o -E "https[^ ]*")
         echo "::set-env name=WETRANS::$wetrans"
         echo "Download Link: ${{ env.EMOJI }} $wetrans ${{ env.EMOJI }} 🚀"
-
     - name: Create release
       id: create_release
       uses: actions/create-release@main
@@ -262,7 +256,6 @@ jobs:
       if: env.SCKEY
       run: |
         [ ${{ env.status }} == 'success' ] && curl https://sc.ftqq.com/${{ secrets.SCKEY }}.send?text=🎉OpenWrt_${{ env.date3 }}_${{ env.DEVICE_NAME }}编译完成😋|| curl https://sc.ftqq.com/${{ secrets.SCKEY }}.send?text=❌OpenWrt_${{ env.date3 }}_${{ env.DEVICE_NAME }}编译失败😂
-
     - name: Telegram notification
       if: env.TELEGRAM_TOKEN
       continue-on-error: true
