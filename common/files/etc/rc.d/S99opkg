@@ -27,7 +27,7 @@ while :; do
 		httping -c 1 https://op.supes.top:88 >/dev/null 2>&1
 		if [ "$?" == "0" ]; then
 			opkg update
-			if [ ! -f /etc/inited ]; then
+			# if [ ! -f /etc/inited ]; then
 				[ uci get dhcp.@dnsmasq[0].noresolv ] && {
 					uci del dhcp.@dnsmasq[0].noresolv
 					uci commit dhcp
@@ -38,20 +38,19 @@ while :; do
 
 				[ -f "/etc/config/installed-opkg" ] && {
 					for ipk in $(cat /etc/config/installed-opkg); do
-						opkg upgrade --force-overwrite --force-depends --force-checksum $ipk
+						opkg upgrade --force-overwrite --force-checksum $ipk
 					done
 					rm -f /etc/config/installed-opkg
 				} || {
 					for ipk in $(cat /etc/backup/installed_packages.txt | grep -oE '.*overlay' | awk '{print $1}'); do
-						opkg upgrade --force-overwrite --force-depends --force-checksum $ipk
+						opkg upgrade --force-overwrite --force-checksum $ipk
 					done
 				}
-
-				find /etc/confbak -type f ! -path '*/ucitrack' ! -path '*/dhcp' ! -path '*/firewall' ! -path '*/network' ! -path '*/system' -exec cp -f '{}' '/etc/config/' \;
+				sysupgrade -k -l >/dev/null 2>&1
 				rm /etc/config/.*-opkg
 				source /etc/profile.d/opkginstall.sh
 				opkg install >/dev/null 2>&1
-			fi
+			# fi
 			rm -f /var/lock/opkg.lock
 			touch /etc/inited
 			break
